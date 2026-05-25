@@ -9,10 +9,10 @@ from ultralytics import YOLO
 from datetime import datetime
 from collections import deque
 
-MQTT_BROKER = "w916a671.ala.asia-southeast1.emqxsl.com"
+MQTT_BROKER = "n1a44690.ala.asia-southeast1.emqxsl.com"
 MQTT_PORT = 8883
-MQTT_USERNAME = "cpsmagang"
-MQTT_PASSWORD = "cpsjaya123"
+MQTT_USERNAME = "testuser"
+MQTT_PASSWORD = "testpass123"
 DEVICE_IP_ADDRESS = "dmouv"
 
 STATUS_TOPIC = f"iot/{DEVICE_IP_ADDRESS}/status"

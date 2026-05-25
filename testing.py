@@ -10,10 +10,10 @@ from ultralytics import YOLO
 from datetime import datetime
 
 # EMQX Cloud Configuration
-MQTT_BROKER = "w916a671.ala.asia-southeast1.emqxsl.com"
+MQTT_BROKER = "n1a44690.ala.asia-southeast1.emqxsl.com"
 MQTT_PORT = 8883  # TLS/SSL port
-MQTT_USERNAME = "cpsmagang"  # Your EMQX Cloud username
-MQTT_PASSWORD = "cpsjaya123"  # Your EMQX Cloud password
+MQTT_USERNAME = "testuser"  # Your EMQX Cloud username
+MQTT_PASSWORD = "testpass123"  # Your EMQX Cloud password
 SYSTEM_NAME = "dmouv"
 
 # MQTT Topics (same as before)
