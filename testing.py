@@ -78,6 +78,8 @@ def on_connect(client, userdata, flags, rc, properties=None):
         print(f"SUBSCRIBE ke topik aksi: {ACTION_TOPIC}")
         client.subscribe(SETTINGS_UPDATE_TOPIC)
         print(f"SUBSCRIBE ke topik settings: {SETTINGS_UPDATE_TOPIC}")
+        # Di fungsi on_connect, tambahkan:
+        client.subscribe("dmouv/device/control")
 
         status_payload = json.dumps({"status": "online"})
         client.publish(STATUS_TOPIC, status_payload)
@@ -98,14 +100,27 @@ def on_connect(client, userdata, flags, rc, properties=None):
 def on_message(client, userdata, msg):
     global devices
     print(f"PESAN DITERIMA di topik {msg.topic}")
+    
+    # Handle ML command (bukan JSON, string biasa)
+    if msg.topic == "dmouv/device/control":
+        command = msg.payload.decode().strip()
+        for name, device in devices.items():
+            if command == "ON" and device["state"] == 0:
+                device["instance"].on()
+                device["state"] = 1
+                print(f"[ML Command] {name} dinyalakan")
+            elif command == "OFF" and device["state"] == 1:
+                device["instance"].off()
+                device["state"] = 0
+                print(f"[ML Command] {name} dimatikan")
+        return  # langsung return, tidak perlu parse JSON
+
     try:
         payload = json.loads(msg.payload.decode())
         
-        # Manual mode
         if msg.topic == ACTION_TOPIC:
             device_name = payload.get("device")
             action = payload.get("action")
-            
             if device_name in devices and action in ["turn_on", "turn_off"]:
                 devices[device_name]["mode"] = "manual"
                 if action == "turn_on":
@@ -116,7 +131,6 @@ def on_message(client, userdata, msg):
                     devices[device_name]["state"] = 0
                 print(f"AKSI MANUAL: '{action}' pada '{device_name}'. Mode diubah ke MANUAL.")
         
-        # Settings update
         elif msg.topic == SETTINGS_UPDATE_TOPIC:
             device_name = payload.get("device")
             if device_name in devices:
@@ -125,7 +139,6 @@ def on_message(client, userdata, msg):
                     if new_mode in ["auto", "manual", "scheduled"]:
                         devices[device_name]["mode"] = new_mode
                         print(f"SETTINGS UPDATE: Mode '{device_name}' diubah menjadi {new_mode.upper()}")
-                
                 if "schedule_on" in payload:
                     devices[device_name]["schedule_on"] = payload["schedule_on"]
                     print(f"SETTINGS UPDATE: Jadwal ON '{device_name}' diatur ke {payload['schedule_on']}")

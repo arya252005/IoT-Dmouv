@@ -236,6 +236,7 @@ def update_motion_detection(keypoints):
 
 def on_connect(client, userdata, flags, rc, properties=None):
     if rc == 0:
+        client.subscribe("dmouv/device/control")
         client.subscribe(ACTION_TOPIC)
         client.subscribe(SETTINGS_UPDATE_TOPIC)
         status_payload = json.dumps({"status": "online"})
@@ -244,6 +245,21 @@ def on_connect(client, userdata, flags, rc, properties=None):
 
 def on_message(client, userdata, msg):
     global devices
+
+    # Handle ML command (string biasa, bukan JSON)
+    if msg.topic == "dmouv/device/control":
+        command = msg.payload.decode().strip()
+        for name, device in devices.items():
+            if command == "ON" and device["state"] == 0:
+                device["instance"].on()
+                device["state"] = 1
+                print(f"[ML Command] {name} dinyalakan")
+            elif command == "OFF" and device["state"] == 1:
+                device["instance"].off()
+                device["state"] = 0
+                print(f"[ML Command] {name} dimatikan")
+        return
+
     try:
         payload = json.loads(msg.payload.decode())
         
