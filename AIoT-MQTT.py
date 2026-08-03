@@ -240,7 +240,7 @@ def on_connect(client, userdata, flags, rc, properties=None):
         client.subscribe(ACTION_TOPIC)
         client.subscribe(SETTINGS_UPDATE_TOPIC)
         status_payload = json.dumps({"status": "online"})
-        client.publish(STATUS_TOPIC, status_payload)
+        client.publish(STATUS_TOPIC, status_payload, retain=True)
         print(f"terhubung")
 
 def on_message(client, userdata, msg):
@@ -299,6 +299,11 @@ client.on_message = on_message
 
 last_will_payload = json.dumps({"status": "offline"})
 client.will_set(STATUS_TOPIC, payload=last_will_payload, qos=1, retain=True)
+import ssl
+context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+context.check_hostname = False
+context.verify_mode = ssl.CERT_NONE
+client.tls_set_context(context)
 
 client.connect(MQTT_BROKER, MQTT_PORT, 60)
 client.loop_start()
