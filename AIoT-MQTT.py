@@ -21,17 +21,17 @@ ACTION_TOPIC = f"iot/{DEVICE_IP_ADDRESS}/action"
 SETTINGS_UPDATE_TOPIC = f"iot/{DEVICE_IP_ADDRESS}/settings/update"
 
 MOTION_CONFIG = {
-    "enabled": True,
-    "detection_duration": 1.0,
-    "movement_threshold": 85.0,
+    "enabled": False,
+    "detection_duration": 0.5,
+    "movement_threshold": 30.0,
     "position_buffer_size": 15,
     "confidence_threshold": 0.5,
-    "stable_detection_frames": 10,
+    "stable_detection_frames": 8,
     "motion_cooldown": 1.0,
-    "min_movement_points": 3,
-    "relative_movement_threshold": 0.15,
+    "min_movement_points": 2,
+    "relative_movement_threshold": 0.05,
     "keypoint_stability_threshold": 0.05,
-    "min_stable_keypoints": 5
+    "min_stable_keypoints": 3
 }
 
 try:
@@ -62,18 +62,18 @@ try:
         "person_positions": deque(maxlen=MOTION_CONFIG["position_buffer_size"]),
         "position_timestamps": deque(maxlen=MOTION_CONFIG["position_buffer_size"]),
         "keypoint_history": deque(maxlen=MOTION_CONFIG["position_buffer_size"]),
-        "is_motion_detected": True,
+        "is_motion_detected": False,
         "motion_start_time": None,
         "last_motion_time": None,
-        "person_detected": True,
-        "motion_triggered": True,
-        "stable_pose_count": 3,
+        "person_detected": False,
+        "motion_triggered": False,
+        "stable_pose_count": 0,
         "reference_keypoints": None
     }
 
     if "usb" in cam_source:
         cam_idx = int(cam_source[3:])
-        cam = cv2.VideoCapture(cam_idx)
+        cam = cv2.VideoCapture(0)
         cam.set(3, resW)
         cam.set(4, resH)
         if not cam.isOpened():
@@ -323,9 +323,9 @@ try:
         update_motion_detection(keypoints)
 
         if pose_found:
-            consecutive_detections = min(consecutive_detections + 1, 15)
+            consecutive_detections = min(consecutive_detections + 1, 20)
         else:
-            consecutive_detections = max(consecutive_detections - 1, 0)
+            consecutive_detections = max(consecutive_detections - 2, 0)
         
         if MOTION_CONFIG["enabled"]:
             should_be_active = (consecutive_detections >= MOTION_CONFIG["stable_detection_frames"] and 
@@ -334,7 +334,7 @@ try:
         else:
             should_be_active = consecutive_detections >= MOTION_CONFIG["stable_detection_frames"]
         
-        should_be_inactive = consecutive_detections <= 0 or not motion_tracker["person_detected"]
+        should_be_inactive = consecutive_detections <= 0
         
         now = datetime.now().time()
 
